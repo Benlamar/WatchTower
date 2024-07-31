@@ -4,4 +4,6 @@ bin
 lib
 lib64
 include
+Scripts
 pyvenv.cfg
+database.db

@@ -73,3 +73,4 @@ watchfiles==0.22.0
 wcwidth==0.2.13
 websockets==11.0.3
 yarl==1.9.4
+passlib

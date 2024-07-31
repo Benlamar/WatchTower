@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from db.models.users import Users
-from schemas.user import CreateUser, UserInDB
+from schemas.user import CreateUser
 from core.security import getPasswordHash
 
 def queryAllUsers(db: Session):
@@ -9,6 +9,14 @@ def queryAllUsers(db: Session):
     except Exception as e:
         print("Error encountered when tyrying to getAllUsers in curd :", e)
         return []
+    
+def queryUserByID(userid:str, db:Session):
+    try:
+        return db.query(Users).where(Users.name=userid).one_or_none()
+        # return db.query(Users).filter(Users.name=userid).one_or_none()
+    except:
+        db.rollback()
+        return None
     
 def queryCreateUser(data: CreateUser, db: Session):
     try:
