@@ -1,0 +1,13 @@
+#root{
+    min-height: 100vh;
+    background-color: rgb(67, 67, 67)
+}
+
+.btn{
+    background-color: rgb(207, 232, 255);
+    padding: 4px 8px;
+    border-radius: 4px;
+    color: black;
+    border: 0;
+    margin: 2px 4px;
+}
