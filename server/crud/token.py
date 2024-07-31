@@ -20,9 +20,8 @@ def queryCreateToken(data:CreateToken, db:Session):
         return None
     
 def queryToken(token:str, db:Session):
-    # try:
-    #     return db.query(Token).filter(Token.token=token).one_or_none()
-    # except:
-    #     print("cannot find the token")
-    #     return None
-    pass
+    try:
+        return db.query(Token).filter(token=token).one_or_none()
+    except:
+        print("cannot find the token")
+        return None

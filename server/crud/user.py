@@ -10,11 +10,13 @@ def queryAllUsers(db: Session):
         print("Error encountered when tyrying to getAllUsers in curd :", e)
         return []
     
-def queryUserByID(userid:str, db:Session):
+def queryUserByID(name:str, db:Session):
     try:
-        return db.query(Users).where(Users.name=userid).one_or_none()
-        # return db.query(Users).filter(Users.name=userid).one_or_none()
-    except:
+        user_info = db.query(Users).where(Users.name.is_(name)).one()
+        
+        return user_info
+    except Exception as e:
+        print("Exception at queryUserByID", e)
         db.rollback()
         return None
     
