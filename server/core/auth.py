@@ -21,7 +21,13 @@ blacklisted_tokens = set()
 
 credentials_exception = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
-    detail="Invalid token",
+    detail="Invalid Credentials",
+    # headers={"WWW-Authenticate": "Bearer"}
+)
+
+token_exception = HTTPException(
+    status_code=status.HTTP_401_UNAUTHORIZED,
+    detail="Invalid Token",
     # headers={"WWW-Authenticate": "Bearer"}
 )
 
@@ -35,11 +41,9 @@ def authenticateUser(username:str, password:str, db:Session):
     try:
         pass_check = verifyPassword(password, _user.hash_password)
         if not pass_check:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid credentials",
-            )
-    except:
+            raise credentials_exception
+    except Exception as e:
+        print("Error authenticateuser: ",e)
         return None
     return UserInDB(id=_user.id, name=_user.name, email=_user.email, accessed=_user._accessed)
 
@@ -60,14 +64,14 @@ def generateRefreshToken(data: dict, expires_delta: Optional[timedelta] = None, 
         if expires_delta:
             expire = datetime.now(timezone.utc)+expires_delta
         else:
-            expire = datetime.now(timezone.utc)+timedelta(minutes=setting.REFRESH_TOKEN_EXPIRE_DAYS)
+            expire = datetime.now(timezone.utc)+timedelta(days=setting.REFRESH_TOKEN_EXPIRE_DAYS)
         to_encode.update({"exp": expire, "type": "refresh"})
         encoded_token = jwt.encode(to_encode, setting.SECRET_REFRESH_KEY, algorithm=setting.ALGORITHM)
 
         # insert token
         token_insert = queryCreateToken(CreateToken(token=encoded_token, user_id=user_id, expiry_date=expire, is_revoked=False), db=db)
-        if token_insert:
-            print("Refresh token inserted", token_insert)
+        if not token_insert:
+            return None
         return encoded_token
     except Exception as e:
         print("Error in generateRefreshToken : ", e)
@@ -79,10 +83,9 @@ def decodeToken(token: str):
         payload = jwt.decode(token, setting.SECRET_REFRESH_KEY, algorithms=[setting.ALGORITHM])
         username: str = payload.get("sub")
         print("Decode token: ", payload)
-        if username is None:
-            raise credentials_exception
-        token_data = TokenData(username=username)
-        return token_data
+        if username is None or username == "":
+            raise token_exception
+        return TokenData(username=username)
     except Exception as e:
-        print("Exception in decode Token", e)
-        raise credentials_exception
+        print("Error in decode Token", e)
+        raise token_exception

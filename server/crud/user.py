@@ -27,9 +27,9 @@ def queryCreateUser(data: CreateUser, db: Session):
         db.add(user)
         db.commit()
         db.refresh(user)
-        # print("Inserted user is", user)
+        print("Inserted user is", user)
         return user
-    except:
+    except Exception as ex:
         db.rollback()
-        print("Error encountered when trying to insert camera")
+        print("Error queryCreateuser: ", ex)
         return None
