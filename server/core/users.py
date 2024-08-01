@@ -1,7 +1,9 @@
 from fastapi.exceptions import HTTPException
+from fastapi import Depends
 from sqlalchemy.orm import Session
 from crud.user import queryAllUsers, queryCreateUser
 from schemas.user import CreateUser, DeleteUser
+from core.auth import oauth2_scheme
 
 
 def getAllUsers(db: Session):

@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Request, dependencies
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import Annotated
-from schemas.token import Token, RefreshTokenSchema
-from core.auth import authenticateUser, generateAccessToken, generateRefreshToken, oauth2_scheme, decodeToken
+from schemas.token import Token, TokenData
+from core.auth import authenticateUser, generateAccessToken, generateRefreshToken, verifyRefreshToken
 from core.settings import setting
 from db.database import getDB
 
@@ -18,6 +18,7 @@ def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db:Session
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"}
         )
     try:
         access_token = generateAccessToken(data={"sub": auth.name, "room_id":setting.ROOM_ID})
@@ -29,7 +30,10 @@ def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db:Session
         response = JSONResponse(content=content, media_type="applicaiton/json")
         response.set_cookie(
             key="refresh_token",
-            value=refresh_token
+            value=refresh_token,
+            httponly=True,
+            secure=True,
+            expires=setting.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 3600
         )
         return response
     except Exception as e:
@@ -37,26 +41,25 @@ def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db:Session
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Error Login",
+            headers={"WWW-Authenticate": "Bearer"}
         )
 
 
-@router.post("/refresh", response_model=Token)
-def refreshToken(request: Request):
-    refresh_token = request.cookies.get("refresh_token")
-    print("Receive are ===>", refresh_token)
+@router.post("/refresh")
+def refreshToken(token_data:TokenData = Depends(verifyRefreshToken)):
     try:
-        decode_data = decodeToken(refresh_token)
-        access_token = generateAccessToken(data={"sub": decode_data.username, "room_id":setting.ROOM_ID})
-
+        #TODO more on verifytoken
+        access_token = generateAccessToken(data={"sub": token_data.username, "room_id":setting.ROOM_ID})
         return Token(access_token=access_token)
     except Exception as e:
-        print("Exception occured: ",e)
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid Token",
-        )
-
-    # refresh_token = generateRefreshToken(data={"sub": token_data.username})
-    # return Token(access_token=access_token, refresh_token=refresh_token)
+        print("Error refreshToken: ",e)
+        return Response(status_code=400).delete_cookie("refresh_token")
 
 
+@router.post("/logout")
+def logout():
+    response = JSONResponse(status_code=200, content={"msg":"Successfull"})
+    response.delete_cookie("refresh_token")
+
+    #TODO Also to delete refresh token from database
+    return response

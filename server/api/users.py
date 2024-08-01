@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Form, HTTPException
 from core.users import getAllUsers, createUser
+from core.auth import oauth2_scheme
 from schemas.user import CreateUser, UserInDB
 from db.database import getDB
 from sqlalchemy.orm import Session
@@ -8,7 +9,9 @@ import json
 router = APIRouter()
 
 @router.get("/")
-def users(db:Session = Depends(getDB)):
+def users(db:Session = Depends(getDB), token = Depends(oauth2_scheme)):
+
+    print("Token ==>", token)
     res_raw = getAllUsers(db)
 
     if res_raw is not None:

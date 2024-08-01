@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Cookie
 from fastapi.security import OAuth2PasswordBearer
 from typing import Optional
 import jwt
@@ -22,14 +22,16 @@ blacklisted_tokens = set()
 credentials_exception = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
     detail="Invalid Credentials",
-    # headers={"WWW-Authenticate": "Bearer"}
+    headers={"WWW-Authenticate": "Bearer"}
 )
+
 
 token_exception = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
     detail="Invalid Token",
-    # headers={"WWW-Authenticate": "Bearer"}
+    headers={"WWW-Authenticate": "Bearer"}
 )
+
 
 def authenticateUser(username:str, password:str, db:Session):
     _user = queryUserByID(username, db)
@@ -58,6 +60,7 @@ def generateAccessToken(data: dict, expires_delta: Optional[timedelta] = None):
     encode_jwt = jwt.encode(to_encode, setting.SECRET_ACCESS_KEY, algorithm=setting.ALGORITHM)
     return encode_jwt
 
+
 def generateRefreshToken(data: dict, expires_delta: Optional[timedelta] = None, user_id : int = 0, db:Session = None):
     try:
         to_encode = data.copy()
@@ -76,10 +79,20 @@ def generateRefreshToken(data: dict, expires_delta: Optional[timedelta] = None, 
     except Exception as e:
         print("Error in generateRefreshToken : ", e)
         return None
+    
+
+def getRefreshToken(refresh_token: str = Cookie(None)):
+    if refresh_token is None or refresh_token == "":
+        return token_exception
+    return refresh_token
 
 
-def decodeToken(token: str):
+def verifyRefreshToken(token:str = Depends(getRefreshToken)):
+    # Token to check token on the database as well 
     try:
+        if token is None or token == "":
+            raise token_exception
+        print("token to check is")
         payload = jwt.decode(token, setting.SECRET_REFRESH_KEY, algorithms=[setting.ALGORITHM])
         username: str = payload.get("sub")
         print("Decode token: ", payload)
