@@ -1,16 +1,20 @@
-import cv2
 import asyncio
-import numpy as np
+from time import sleep
 
-from av import VideoFrame
-from aiortc import VideoStreamTrack
-from aiortc.contrib.media import MediaRelay, MediaPlayer
-from janus_client import JanusSession, JanusVideoRoomPlugin
-
-relay = MediaRelay()
-
-class OpenCVVideoStreamTrack(VideoStreamTrack):
-    pass
 
 class StreamRunner:
-    pass
+    def __init__(self, name, loop) -> None:
+        self.name = name
+        self.loop = loop
+
+    async def start(self):
+        print(self.name+" Started!")
+        await self.countStart()
+            
+    async def countStart(self):
+        i = 0
+        while i < self.loop:
+            print(f"looping --->{self.name} - {i}")
+            i += 1
+            asyncio.sleep(0.1)
+        print(self.name + " is completed!")
