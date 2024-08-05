@@ -24,6 +24,7 @@ credentials_exception = HTTPException(
     headers={"WWW-Authenticate": "Bearer"}
 )
 
+
 token_exception = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
     detail="Invalid Token",
@@ -77,7 +78,7 @@ def generateRefreshToken(data: dict, expires_delta: Optional[timedelta] = None, 
     except Exception as e:
         print("Error in generateRefreshToken : ", e)
         return None
-    
+ 
 
 def getRefreshToken(refresh_token: str = Cookie(None)):
     if refresh_token is None or refresh_token == "":
@@ -91,35 +92,44 @@ def verifyRefreshToken(db:Session, token: str):
         if token is None or token == "":
             raise token_exception
         
-        print("token to check is ", token)
         token_fromdb = queryToken(token, db)
-        print("Token form db", token_fromdb.token)
-
         if token_fromdb is None:
             raise token_exception
 
         payload = jwt.decode(token, setting.SECRET_REFRESH_KEY, algorithms=[setting.ALGORITHM])
+
         username: str = payload.get("sub")
-        print("Decode token: ", payload)
         if username is None or username == "":
             raise token_exception
+        
         return TokenData(username=username)
     except Exception as e:
         print("Error in decode Token", e)
         raise token_exception
+
+
+def verifyAccessToken(token: str):
+    if token is None or token == "":
+        raise token_exception
     
-def verifyAccessToken(token):
-    pass
-    
+    try:
+        payload = jwt.decode(token, setting.SECRET_ACCESS_KEY, algorithms=[setting.ALGORITHM])
+        username: str = payload.get("sub")
+
+        if username is None or username == "":
+            raise token_exception
+        return TokenData(username=username)
+    except Exception as e:
+        raise token_exception
+
 
 def deleteSession(db:Session, token: str):
     try:
         delete_token = queryDeleteToken(token, db)
         if delete_token is None or token == "":
-            print("failed to delete token")
             raise token_exception
         return True
     except Exception as ex:
         print("Exception deleteSession : ",ex)
-        return True
+        return False
     

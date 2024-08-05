@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import Annotated
-from schemas.token import Token, TokenData
+from schemas.token import Token
 from core.auth import (authenticateUser, generateAccessToken, 
                        generateRefreshToken, verifyRefreshToken, getRefreshToken,
                        deleteSession)
@@ -15,16 +15,19 @@ router = APIRouter()
 @router.post("/login")
 def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db:Session = Depends(getDB)):
     auth = authenticateUser(form_data.username, form_data.password, db)
-    print("Authenticate ", auth)
     if not auth:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
+            detail="Incorrect credentials",
             headers={"WWW-Authenticate": "Bearer"}
         )
     try:
-        access_token = generateAccessToken(data={"sub": auth.name, "room_id":setting.ROOM_ID})
-        refresh_token = generateRefreshToken(data={"sub":auth.name}, user_id=auth.id, db=db)
+        access_token = generateAccessToken(data={"sub": auth.name, 
+                                                 "room_id":setting.ROOM_ID})
+        refresh_token = generateRefreshToken(data={"sub":auth.name}, 
+                                             user_id=auth.id, 
+                                             db=db)
+
         if (access_token is None or refresh_token is None):
             raise Exception("Tokens could not be generated")
         
@@ -66,6 +69,7 @@ def refreshToken(db: Session = Depends(getDB), token:str = Depends(getRefreshTok
 
 @router.post("/logout")
 def logout(db:Session = Depends(getDB), token:str = Depends(getRefreshToken)):
+    # not sure if check access token here
     try:
         delete_session:bool = deleteSession(db, token)
         if not delete_session:

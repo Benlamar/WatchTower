@@ -13,7 +13,6 @@ def queryAllUsers(db: Session):
 def queryUserByID(name:str, db:Session):
     try:
         user_info = db.query(Users).where(Users.name.is_(name)).one()
-        
         return user_info
     except Exception as e:
         print("Exception at queryUserByID", e)
@@ -23,13 +22,22 @@ def queryUserByID(name:str, db:Session):
 def queryCreateUser(data: CreateUser, db: Session):
     try:
         hashed_password = getPasswordHash(data.password)
-        user = Users(name=data.name, email=data.email, hash_password=hashed_password)
+        user = Users(name=data.name, 
+                     email=data.email, 
+                     hash_password=hashed_password)
         db.add(user)
         db.commit()
         db.refresh(user)
-        print("Inserted user is", user)
         return user
     except Exception as ex:
         db.rollback()
         print("Error queryCreateuser: ", ex)
         return None
+
+
+def queryUpdateUser():
+    pass
+
+
+def queryDeleteUser():
+    pass

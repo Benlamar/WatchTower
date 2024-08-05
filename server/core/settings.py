@@ -11,6 +11,7 @@ class Settings:
     REFRESH_TOKEN_EXPIRE_DAYS: int = 1
 
     ROOM_ID = 1122
+    MEDIA_SERVEr = "ws://localhost:8188"
 
 
 setting = Settings()

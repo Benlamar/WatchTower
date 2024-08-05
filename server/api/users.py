@@ -1,16 +1,18 @@
 from fastapi import APIRouter, Depends, Form, HTTPException
 from core.users import getAllUsers, createUser
-from core.auth import oauth2_scheme
+from core.auth import oauth2_scheme, verifyAccessToken, token_exception
 from schemas.user import CreateUser, UserInDB
 from db.database import getDB
 from sqlalchemy.orm import Session
-import json
 
 router = APIRouter()
 
 @router.get("/")
 def users(db:Session = Depends(getDB), token = Depends(oauth2_scheme)):
-    print("Token ==>", token)
+    verify_token = verifyAccessToken(token)
+    if not verify_token:
+        raise token_exception
+
     res_raw = getAllUsers(db)
 
     if res_raw is not None:
@@ -18,9 +20,15 @@ def users(db:Session = Depends(getDB), token = Depends(oauth2_scheme)):
         return data
     return []
 
+
 @router.post("/create")
-def create(user: CreateUser, db:Session = Depends(getDB)):
+def create(user: CreateUser, db:Session = Depends(getDB), token = Depends(oauth2_scheme)):
+    verify_token = verifyAccessToken(token)
+    if not verify_token:
+        raise token_exception
+    
     res = createUser(user, db)
+
     if res is not None:
         data = UserInDB(id=res.id, name=res.name, email=res.email, accessed=res._accessed)
         return data

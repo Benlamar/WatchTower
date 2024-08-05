@@ -6,8 +6,8 @@ c_tasker = Celery("tasker", broker="redis://localhost:6379/")
 
 @c_tasker.task
 async def startTasker():
-    stamp = random.randint(50, 120)
-    runner = StreamRunner("Task"+str(stamp), stamp)
-    await runner.start()
-
+    # stamp = random.randint(50, 120)
+    # runner = StreamRunner("Task"+str(stamp), stamp)
+    # await runner.start()
+    pass
 

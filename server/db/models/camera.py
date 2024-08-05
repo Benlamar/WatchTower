@@ -10,4 +10,6 @@ class Camera(Base):
     location = Column(String(100), unique=True)
     ip_address = Column(String(255), unique=True)
     _created = Column(DateTime(), default=datetime.now(timezone.utc))
-    _accessed = Column(DateTime(), default=datetime.now(timezone.utc))
+    _accessed = Column(DateTime(), 
+                       default=datetime.now(timezone.utc),
+                       onupdate=datetime.now(timezone.utc))

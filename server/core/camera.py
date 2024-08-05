@@ -11,15 +11,16 @@ def getAllCamera(db:Session):
         raise HTTPException(status_code=500, detail="Failed to query all camera")
 
 def createCamera(cam_data: CreateCamera, db:Session):
-    print("Data to insert ; ", cam_data)
     try:
-        create_cam = queryInsertCamera(cam_data, db)
-        if create_cam is None:
+        create = queryInsertCamera(cam_data, db)
+        if create is None:
             return None
         else:
-            return CreateCamera(**create_cam)
+            return CreateCamera(cam_name = create.cam_name, 
+                                location = create.location,
+                                ip_address = create.ip_address)
     except:
-        raise HTTPException(status_code=500, detail="Failed toquery add camera")
+        raise HTTPException(status_code=500, detail="Failed to query add camera")
 
 def removeCamera(cam_id: DeleteCamera, db:Session):
     pass
