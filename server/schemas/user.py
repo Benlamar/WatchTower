@@ -9,6 +9,7 @@ class CreateUser(UserBase):
     password: str
 
 class UserInDB(UserBase):
+    id: int
     accessed: datetime
 
 class DeleteUser(BaseModel):

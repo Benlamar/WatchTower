@@ -10,7 +10,6 @@ def queryAllCamera(db: Session):
         return []
     
 def queryInsertCamera(data: CreateCamera, db: Session):
-    print("Data to insert : ", data)
     try:
         cam = camera.Camera(cam_name = data.cam_name,
                              location=data.location, 
@@ -23,3 +22,9 @@ def queryInsertCamera(data: CreateCamera, db: Session):
         db.rollback()
         print("Error encountered when trying to insert camera: "+ex)
         return None
+
+def queryUpdateCamera():
+    pass
+
+def queryRemoveCamera():
+    pass
