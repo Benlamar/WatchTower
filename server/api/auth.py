@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Response, Request, dependencies
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from fastapi.responses import JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import Annotated
 from schemas.token import Token, TokenData
-from core.auth import authenticateUser, generateAccessToken, generateRefreshToken, verifyRefreshToken
+from core.auth import (authenticateUser, generateAccessToken, 
+                       generateRefreshToken, verifyRefreshToken, getRefreshToken,
+                       deleteSession)
 from core.settings import setting
 from db.database import getDB
 
@@ -46,20 +48,32 @@ def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db:Session
 
 
 @router.post("/refresh")
-def refreshToken(token_data:TokenData = Depends(verifyRefreshToken)):
+def refreshToken(db: Session = Depends(getDB), token:str = Depends(getRefreshToken)):
     try:
         #TODO more on verifytoken
+        token_data = verifyRefreshToken(db, token)
         access_token = generateAccessToken(data={"sub": token_data.username, "room_id":setting.ROOM_ID})
         return Token(access_token=access_token)
     except Exception as e:
         print("Error refreshToken: ",e)
-        return Response(status_code=400).delete_cookie("refresh_token")
+        # return Response(status_code=400).delete_cookie("refresh_token")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Token",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
 
 
 @router.post("/logout")
-def logout():
-    response = JSONResponse(status_code=200, content={"msg":"Successfull"})
-    response.delete_cookie("refresh_token")
-
-    #TODO Also to delete refresh token from database
+def logout(db:Session = Depends(getDB), token:str = Depends(getRefreshToken)):
+    try:
+        delete_session:bool = deleteSession(db, token)
+        if not delete_session:
+            raise Exception("Can not delete session from db")
+        response = JSONResponse(status_code=200, content={"msg":"Successfull"})
+    except Exception as ex:
+        print("Exception ",ex)
+        response = JSONResponse(status_code=400, content={"msg":"Token missing"})
+    finally:
+        response.delete_cookie("refresh_token")
     return response

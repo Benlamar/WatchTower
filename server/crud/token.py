@@ -18,10 +18,27 @@ def queryCreateToken(data:CreateToken, db:Session):
         print("Cannot create token in the database")
         db.rollback()
         return None
+
     
 def queryToken(token:str, db:Session):
     try:
-        return db.query(Token).filter(token=token).one_or_none()
+        return db.query(Token).filter(Token.token.is_(token)).one()
     except:
-        print("cannot find the token")
+        print("cannot find the token in db")
         return None
+
+
+def queryDeleteToken(token:str, db:Session):
+    try:
+        token = db.query(Token).filter(Token.token.is_(token)).one()
+        print("Token from db: ", token, token.id)
+        if token:
+            delete_token = db.delete(token)
+            db.commit()
+            print("Token deleted")
+            return True
+        return False
+    except Exception as ex:
+        db.rollback()
+        print("Expection queryDeleteToken : ", ex)
+        return False

@@ -10,7 +10,6 @@ router = APIRouter()
 
 @router.get("/")
 def users(db:Session = Depends(getDB), token = Depends(oauth2_scheme)):
-
     print("Token ==>", token)
     res_raw = getAllUsers(db)
 

@@ -3,7 +3,6 @@ from fastapi.security import OAuth2PasswordBearer
 from typing import Optional
 import jwt
 from datetime import datetime, timezone, timedelta
-# from uuid import uuid4
 
 from core.settings import setting
 from core.security import verifyPassword
@@ -11,7 +10,7 @@ from schemas.token import TokenData, CreateToken
 from schemas.user import UserInDB
 from sqlalchemy.orm import Session
 from crud.user import queryUserByID
-from crud.token import queryCreateToken, queryToken
+from crud.token import queryCreateToken, queryToken, queryDeleteToken
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
@@ -24,7 +23,6 @@ credentials_exception = HTTPException(
     detail="Invalid Credentials",
     headers={"WWW-Authenticate": "Bearer"}
 )
-
 
 token_exception = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
@@ -87,12 +85,19 @@ def getRefreshToken(refresh_token: str = Cookie(None)):
     return refresh_token
 
 
-def verifyRefreshToken(token:str = Depends(getRefreshToken)):
+def verifyRefreshToken(db:Session, token: str):
     # Token to check token on the database as well 
     try:
         if token is None or token == "":
             raise token_exception
-        print("token to check is")
+        
+        print("token to check is ", token)
+        token_fromdb = queryToken(token, db)
+        print("Token form db", token_fromdb.token)
+
+        if token_fromdb is None:
+            raise token_exception
+
         payload = jwt.decode(token, setting.SECRET_REFRESH_KEY, algorithms=[setting.ALGORITHM])
         username: str = payload.get("sub")
         print("Decode token: ", payload)
@@ -102,3 +107,19 @@ def verifyRefreshToken(token:str = Depends(getRefreshToken)):
     except Exception as e:
         print("Error in decode Token", e)
         raise token_exception
+    
+def verifyAccessToken(token):
+    pass
+    
+
+def deleteSession(db:Session, token: str):
+    try:
+        delete_token = queryDeleteToken(token, db)
+        if delete_token is None or token == "":
+            print("failed to delete token")
+            raise token_exception
+        return True
+    except Exception as ex:
+        print("Exception deleteSession : ",ex)
+        return True
+    

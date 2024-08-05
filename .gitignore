@@ -7,4 +7,5 @@ include
 Scripts
 pyvenv.cfg
 database.db
+share
 *.swp
