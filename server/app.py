@@ -34,9 +34,13 @@ app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(users.router, prefix="/users", tags=["users"])
 app.include_router(camera.router, prefix="/camera", tags=["camera"])
 
+from core.settings import setting
 @app.get("/start")
-async def getStart():
-    args=[0, 1122, "Cam 1"]
-    task_id = startTasker.delay(*args)
-    print("Task id", task_id)
+def getStart():
+    kwargs = {"source": 0, "room_id":setting.ROOM_ID, "stream_name": "Web Cam"}
+    task_id = startTasker.delay(**kwargs)
     return "OK "+str(task_id)
+
+@app.port('/stop_task')
+def stopTask():
+    pass
