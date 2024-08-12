@@ -35,6 +35,8 @@ app.include_router(users.router, prefix="/users", tags=["users"])
 app.include_router(camera.router, prefix="/camera", tags=["camera"])
 
 @app.get("/start")
-def getStart():
-    task_id = startTasker.delay()
+async def getStart():
+    args=[0, 1122, "Cam 1"]
+    task_id = startTasker.delay(*args)
+    print("Task id", task_id)
     return "OK "+str(task_id)
