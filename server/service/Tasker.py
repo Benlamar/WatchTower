@@ -1,10 +1,30 @@
-from celery import Celery
-from service.StreamingService import StreamServiveRunner
 import asyncio
+import os
+from celery import Celery
+from celery.result import AsyncResult
+from service.StreamingService import StreamServiveRunner
+from time import sleep
 
-c_tasker = Celery("tasker", broker="redis://localhost:6379/")
+c_tasker = Celery("tasker", broker=os.getenv("REDIS_URL"))
 
 @c_tasker.task
 def startTasker(**kwargs):
     runner = StreamServiveRunner(source=kwargs["source"], room_id=kwargs["room_id"], stream_name=kwargs["stream_name"])
     asyncio.run(runner.start())
+    # for i in range(60):
+    #     print(i)
+    #     sleep(1)
+
+def revokeTask(task:str):
+    task_result = AsyncResult(id=task, app=c_tasker)
+
+    if not task_result:
+        return False
+    if task_result.state == 'PENDING':
+        task_result.revoke(terminate=True)
+    elif task_result.state == 'STARTED':
+        task_result.revoke(terminate=True)
+    elif task_result.state == 'PROGRESS':
+        task_result.revoke(terminate=True)
+    
+    return True
