@@ -10,7 +10,7 @@ from schemas.token import TokenData, CreateToken
 from schemas.user import UserInDB
 from sqlalchemy.orm import Session
 from crud.user import queryUserByID
-from crud.token import queryCreateToken, queryToken, queryDeleteToken
+from crud.token import queryCreateToken, queryToken, queryDeleteToken, queryTokenByUserID
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
@@ -50,17 +50,42 @@ def authenticateUser(username:str, password:str, db:Session):
 
 
 def generateAccessToken(data: dict, expires_delta: Optional[timedelta] = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.now(timezone.utc)+expires_delta
-    else:
-        expire = datetime.now(timezone.utc)+timedelta(minutes=setting.ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire, "type": "access"})
-    encode_jwt = jwt.encode(to_encode, setting.SECRET_ACCESS_KEY, algorithm=setting.ALGORITHM)
-    return encode_jwt
+    try:
+        to_encode = data.copy()
+        if expires_delta:
+            expire = datetime.now(timezone.utc)+expires_delta
+        else:
+            expire = datetime.now(timezone.utc)+timedelta(minutes=setting.ACCESS_TOKEN_EXPIRE_MINUTES)
+        to_encode.update({"exp": expire, "type": "access"})
+        encode_jwt = jwt.encode(to_encode, setting.SECRET_ACCESS_KEY, algorithm=setting.ALGORITHM)
+        return encode_jwt
+    except Exception as e:
+        print(f"Error generating access token {e}")
+        return None
 
 
-def generateRefreshToken(data: dict, expires_delta: Optional[timedelta] = None, user_id : int = 0, db:Session = None):
+def compareTimestamp(t_stamp:int):
+    try:
+        timestamp = datetime.fromtimestamp(t_stamp, tz=timezone.utc)
+        if timestamp > datetime.now(timezone.utc):
+            return True
+    except Exception as e:
+        print(f"Error compareTimestamp {e}")
+    return False
+
+def generateRefreshToken(data: dict, expires_delta: Optional[timedelta] = None, 
+                         user_id : int = 0, db:Session = None):
+    try:
+        # check for existing token
+        existing_token = queryTokenByUserID(user_id, db)
+        if existing_token:
+            decode_token = jwt.decode(existing_token.token, key=setting.SECRET_REFRESH_KEY, algorithms=[setting.ALGORITHM])
+            exp = decode_token.get("exp")
+            if compareTimestamp(int(exp)):
+                return existing_token.token
+    except Exception as e:
+        print(f"Error in trying to get the existing token {e}")
+
     try:
         to_encode = data.copy()
         if expires_delta:
@@ -78,8 +103,8 @@ def generateRefreshToken(data: dict, expires_delta: Optional[timedelta] = None, 
     except Exception as e:
         print("Error in generateRefreshToken : ", e)
         return None
- 
-
+    
+# this gets the token from the access token
 def getRefreshToken(refresh_token: str = Cookie(None)):
     if refresh_token is None or refresh_token == "":
         return token_exception
