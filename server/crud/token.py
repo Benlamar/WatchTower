@@ -14,11 +14,20 @@ def queryCreateToken(data:CreateToken, db:Session):
         db.commit()
         db.refresh(token)
         return token
-    except:
-        print("Cannot create token in the database")
+    except Exception as e:
+        print("Cannot create token in the database {e}")
         db.rollback()
         return None
 
+def queryTokenByUserID(user_id:int, db: Session):
+    try:
+        existing_token = db.query(Tokens).filter(Tokens.user_id.is_(user_id)).one()
+        if not existing_token:
+            return None
+        return existing_token     
+    except Exception as e:
+        print("Error in querying token {e}")
+        return None
     
 def queryToken(token:str, db:Session):
     try:

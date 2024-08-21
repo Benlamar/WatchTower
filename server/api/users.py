@@ -34,3 +34,4 @@ def create(user: CreateUser, db:Session = Depends(getDB), token = Depends(oauth2
         return data
     else:
         raise HTTPException(detail="Failed to create user", status_code=400)
+    

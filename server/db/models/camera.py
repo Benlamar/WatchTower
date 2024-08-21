@@ -7,8 +7,11 @@ class Camera(Base):
     
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     cam_name = Column(String(100), index=True)
-    location = Column(String(100), unique=True)
-    ip_address = Column(String(255), unique=True)
+    location = Column(String(100)) # unique=True
+    source = Column(String(255), unique=True)
+    boundary = Column(String(255), nullable=True)
+    task = Column(String(255), nullable=True)
+    
     _created = Column(DateTime(), default=datetime.now(timezone.utc))
     _accessed = Column(DateTime(), 
                        default=datetime.now(timezone.utc),
