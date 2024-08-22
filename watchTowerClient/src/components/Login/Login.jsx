@@ -1,4 +1,6 @@
 import React, { useRef, useState } from 'react'
+import { setAuth } from "../../slices/authSlice";
+import {useDispatch, useSelector}  from 'react-redux';
 
 const Login = () => {
   const username_ref = useRef("");
@@ -6,8 +8,10 @@ const Login = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-
   const [errors, setErrors] = useState([])
+
+  const auth = useSelector(state => state);
+  const dispatch = useDispatch();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -25,14 +29,13 @@ const Login = () => {
       setErrors(errors)
       return;
     }
-    console.log("Starting to send login request")
+    // console.log("Starting to send login request")
     setLoading(true);
     try {
-      // await 
-
+      dispatch(setAuth({user:username_ref.current.value, role:"normal", auth:true}));
     }
     catch (err) {
-
+      console.log(err)
     }
     finally {
       setLoading(false)
