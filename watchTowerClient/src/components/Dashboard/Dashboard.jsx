@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import VideoRoomClient from "../../Service/JanusRoomClient";
+import { useSelector } from "react-redux";
 
 const Dashboard = () => {
   const JANUS_URL = "http://localhost:8088/janus";
@@ -7,6 +8,8 @@ const Dashboard = () => {
 
   const [streams, setStreams] = useState({});
   const videoRoomRef = useRef(null);
+
+  const roomSelector = useSelector((state)=>state.stream.roomid)
 
   const handleStreamAdded = useCallback((publisherId, mid, stream) => {
     // console.log(`Stream added: publisher ${publisherId}, mid ${mid}`, stream);
@@ -57,33 +60,33 @@ const Dashboard = () => {
       });
   }, [handleStreamAdded, handleStreamRemoved]);
 
-  useEffect(() => {
-    initVideoRoom();
+  // useEffect(() => {
+  //   initVideoRoom();
 
-    return () => {
-      if (videoRoomRef.current) {
-        videoRoomRef.current.destroy();
-      }
-    };
-  }, [initVideoRoom]);
+  //   return () => {
+  //     if (videoRoomRef.current) {
+  //       videoRoomRef.current.destroy();
+  //     }
+  //   };
+  // }, [initVideoRoom]);
 
   // Add event listener for online/offline events
-  useEffect(() => {
-    const handleOnline = () => {
-      // console.log("Browser is online, attempting to reconnect...");
-      initVideoRoom();
-    };
+  // useEffect(() => {
+  //   const handleOnline = () => {
+  //     // console.log("Browser is online, attempting to reconnect...");
+  //     initVideoRoom();
+  //   };
 
-    window.addEventListener("online", handleOnline);
+  //   window.addEventListener("online", handleOnline);
 
-    return () => {
-      window.removeEventListener("online", handleOnline);
-    };
-  }, [initVideoRoom]);
+  //   return () => {
+  //     window.removeEventListener("online", handleOnline);
+  //   };
+  // }, [initVideoRoom]);
 
   return (
     <div className="dashboard h-full p-4">
-      <h1>Dashboard</h1>
+      <h1>Dashboard {roomSelector}</h1>
 
       <div className="video-container grid grid-cols-2 gap-4">
         {Object.entries(streams).map(([publisherId, publisherStreams]) => (

@@ -1,6 +1,10 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authSlice from "./slices/authSlice";
+import streamSlice from "./slices/streamSlice";
 
 export const store = configureStore({
-    reducer: authSlice
+    reducer: {
+        auth: authSlice,
+        stream: streamSlice
+    }
 });
