@@ -67,10 +67,13 @@ def generateAccessToken(data: dict, expires_delta: Optional[timedelta] = None):
 def compareTimestamp(t_stamp:int):
     try:
         timestamp = datetime.fromtimestamp(t_stamp, tz=timezone.utc)
-        if timestamp > datetime.now(timezone.utc):
+        # print(f"{timestamp} ==> {datetime.now(timezone.utc)}")
+
+        if timestamp >= datetime.now(timezone.utc):
             return True
     except Exception as e:
         print(f"Error compareTimestamp {e}")
+    
     return False
 
 def generateRefreshToken(data: dict, expires_delta: Optional[timedelta] = None, 
@@ -81,6 +84,7 @@ def generateRefreshToken(data: dict, expires_delta: Optional[timedelta] = None,
         if existing_token:
             decode_token = jwt.decode(existing_token.token, key=setting.SECRET_REFRESH_KEY, algorithms=[setting.ALGORITHM])
             exp = decode_token.get("exp")
+
             if compareTimestamp(int(exp)):
                 return existing_token.token
     except Exception as e:
@@ -92,6 +96,7 @@ def generateRefreshToken(data: dict, expires_delta: Optional[timedelta] = None,
             expire = datetime.now(timezone.utc)+expires_delta
         else:
             expire = datetime.now(timezone.utc)+timedelta(days=setting.REFRESH_TOKEN_EXPIRE_DAYS)
+
         to_encode.update({"exp": expire, "type": "refresh"})
         encoded_token = jwt.encode(to_encode, setting.SECRET_REFRESH_KEY, algorithm=setting.ALGORITHM)
 

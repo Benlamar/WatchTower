@@ -33,6 +33,7 @@ def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], db:Session
         
         content = Token(access_token=access_token).model_dump()
         response = JSONResponse(content=content, media_type="applicaiton/json")
+        
         response.set_cookie(
             key="refresh_token",
             value=refresh_token,

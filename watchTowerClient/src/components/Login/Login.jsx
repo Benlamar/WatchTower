@@ -24,6 +24,7 @@ const Login = () => {
     const errors = [];
     let username = "";
     let password = "";
+
     if (!username_ref.current?.value) {
       errors.push("Username cannot be empty!");
     } else {
@@ -55,13 +56,16 @@ const Login = () => {
         .then((res) => {
           const token = res.data.access_token;
           const decode = jwtDecode(token);
+
+          console.log("After login",decode);
           dispatch(setRoomID({ roomid: parseInt(decode.room_id) }));
           dispatch(
             setAuth({
               user: decode.sub,
-              role: "normal",
               auth: true,
+              role: "normal",
               accessToken: token,
+              
             })
           );
           navigate("/");
